@@ -10,8 +10,22 @@ use near_sdk::{
 use crate::internal::*;
 mod internal;
 mod sell;
+mod view;
+mod external;
+
+pub type TicketID = String;
 
 const CONTRACT_INIT_BALANCE: u128 = 1000 * 1_000_000_000_000;
+static TICKET_PREFIX: &str = "ticket_";
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Ticket {
+    pub merchant_id: AccountId,
+    pub buyer_id: AccountId,
+    pub ammount: u128,
+    pub height: u64,
+}
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -20,16 +34,20 @@ pub struct Contract {
     pub children_account_ids: UnorderedMap<AccountId, UnorderedSet<U128>>,
     pub next_child_account_id: U128,
     pub balance_per_account: LookupMap<AccountId, u128>,
+    pub history: UnorderedMap<TicketID, Ticket>,
+    pub selling_history: LookupMap<AccountId, UnorderedSet<TicketID>>,
 }
 
 #[derive(BorshSerialize, BorshStorageKey)]
 pub enum StorageKey {
     Contract,
+    History,
     ByChildrenAccountIds,
     ByChildrenAccountIdsInner { account_id_hash: CryptoHash },
     ByBalancePerAccount,
     ByBalancePerAccountInner { account_id_hash: CryptoHash },
-
+    BySellingHistory,
+    BySellingHistoryInner { account_id_hash: CryptoHash },
 }
 
 #[near_bindgen]
@@ -42,6 +60,8 @@ impl Contract {
             children_account_ids: UnorderedMap::new(StorageKey::ByChildrenAccountIds),
             next_child_account_id: U128(0),
             balance_per_account: LookupMap::new(StorageKey::ByBalancePerAccount),
+            history: UnorderedMap::new(StorageKey::History),
+            selling_history: LookupMap::new(StorageKey::BySellingHistory),
         };
         this
     }
@@ -68,16 +88,7 @@ impl Contract {
         )
     }
 
-    pub fn cross_dos(&self) -> Promise {
-        ext_example::ft_transfer(
-            "jephtest.testnet".to_string(), 
-            "10000000".to_string(), 
-            "".to_string(), 
-            AccountId::new_unchecked("usdc.fakes.testnet".to_string()), 
-            1, 
-            Gas(5_000_000_000_000),
-        )
-    }
+
 
     #[private]
     fn _init_sub_account(&mut self, merchant_id: AccountId, /*sub_id: u128,*/ code_hash: Vec<u8>) /*-> Promise*/ {
@@ -113,4 +124,3 @@ pub trait ExtExample {
     fn log_signer(&self);
     fn ft_transfer(&self, receiver_id: String, amount: String, memo: String);
 }
-
