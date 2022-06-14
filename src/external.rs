@@ -1,3 +1,5 @@
+use std::result;
+
 use crate::*;
 use near_sdk::{is_promise_success, promise_result_as_success};
 
@@ -18,11 +20,19 @@ impl Contract {
         merchant_id: AccountId,
         buyer_id: AccountId,
         ammount: u128,
-    ) -> Promise {
+    ) -> Promise<void> {
         let mut transfer_succeeded = is_promise_success();
-        env::log_str(String::from_utf8(promise_result_as_success().unwrap()).as_str());
         if transfer_succeeded {
-            
+            let result = String::from_utf8(promise_result_as_success().unwrap());
+            if result.is_ok() {
+                let result = result.unwrap();
+                if result == "success".to_string() {
+                    transfer_succeeded = true;
+                } else {
+                    transfer_succeeded = false;
+                }
+            }
+            env::log_str(format!("The account is created and link is claimed: {}", transfer_succeeded).as_str());
         }
     }
 }
