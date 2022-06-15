@@ -1,6 +1,6 @@
 use near_sdk::require;
 
-use crate::*;
+use crate::{*, external::ext_self};
 
 trait SellingFunctions {
     fn confirm_sell(&mut self, merchant_id: AccountId, buyer_id: AccountId, ammount: u128);
@@ -24,10 +24,16 @@ impl SellingFunctions for Contract{
             "".to_string(), 
             AccountId::new_unchecked("usdc.fakes.testnet".to_string()), 
             1,
-            Gas(5_000_000_000_000), 
+            GAS_FOR_BASIC_CROSS_CONTRACT_CALL, 
         ).then(
-self.selling_history.insert(&merchant_id, &self.history.get(&self.history.len()).unwrap())
-        
+        ext_self::after_sell_confirm(
+            merchant_id, 
+            buyer_id, 
+            ammount, 
+            env::current_account_id(), 
+            1, 
+            GAS_FOR_BASIC_CROSS_CONTRACT_CALL
+        )
         );
      }
 }

@@ -14,6 +14,7 @@ mod view;
 mod external;
 
 pub type TicketID = String;
+const GAS_FOR_BASIC_CROSS_CONTRACT_CALL: Gas = Gas(5_000_000_000_000);
 
 const CONTRACT_INIT_BALANCE: u128 = 1000 * 1_000_000_000_000;
 static TICKET_PREFIX: &str = "ticket_";
