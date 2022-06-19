@@ -9,9 +9,9 @@ pub trait ExtSelf {
         &mut self,
         merchant_id: AccountId,
         buyer_id: AccountId,
-        ammount: u128,
+        amount: u128,
     ) -> Promise;
-    fn add_amount_to_balance(&mut self, merchant_id: AccountId, ammount: u128);
+    fn add_amount_to_balance(&mut self, merchant_id: AccountId, amount: u128);
 
 }
 
@@ -21,7 +21,7 @@ impl Contract {
         &mut self,
         merchant_id: AccountId,
         buyer_id: AccountId,
-        ammount: u128,
+        amount: u128,
     ) /*-> Promise<void>*/ {
         require!(env::signer_account_id() == merchant_id, "Only merchant can confirm sell");
         require!(env::predecessor_account_id() == AccountId::new_unchecked("usdc.fakes.testnet".to_string()), "Only p2p can confirm sell");
@@ -33,7 +33,7 @@ impl Contract {
                 if result == "false".to_string() {
                     transfer_succeeded = false;
                     let balance: u128 = self.balance_per_account.get(&merchant_id).unwrap_or(0u128);
-                    let new_balance: u128 = balance + ammount;
+                    let new_balance: u128 = balance + amount;
                     self.balance_per_account.insert(&merchant_id, &new_balance);
                 } else {
                     transfer_succeeded = true;
@@ -45,15 +45,15 @@ impl Contract {
 
     fn add_amount_to_balance(&mut self,
         merchant_id: AccountId,
-        ammount: u128) {
+        amount: u128) {
             log_str("add_amount_to_balance");
             log_str(format!("{}", merchant_id).as_str());
-            log_str(format!("{}", ammount).as_str());
+            log_str(format!("{}", amount).as_str());
             log_str(format!("{}", env::current_account_id()).as_str());
             log_str(format!("{}", env::predecessor_account_id()).as_str());
             log_str(format!("{}", env::signer_account_id()).as_str());
 let balance: u128 = self.balance_per_account.get(&merchant_id).unwrap_or(0u128);
-let new_balance: u128 = balance + ammount;
+let new_balance: u128 = balance + amount;
 self.balance_per_account.insert(&merchant_id, &new_balance);
 }
 }

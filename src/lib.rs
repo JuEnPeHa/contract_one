@@ -25,7 +25,7 @@ static TICKET_PREFIX: &str = "ticket_";
 pub struct Ticket {
     pub merchant_id: AccountId,
     pub buyer_id: AccountId,
-    pub ammount: u128,
+    pub amount: u128,
     pub height: u64,
 }
 
@@ -119,7 +119,7 @@ impl Contract {
         //true
     }
 
-    fn destroy_sub_account(&mut self, merchant_id: AccountId, sub_id: AccountId, ammount: u128) {
+    fn destroy_sub_account(&mut self, merchant_id: AccountId, sub_id: AccountId, amount: u128) {
         // let mut children_account_ids: UnorderedSet<U128> =
         // self.children_account_ids.get(&merchant_id).unwrap_or_else(|| {
         //     UnorderedSet::new(
@@ -134,7 +134,7 @@ impl Contract {
 
         let mut balance_per_account: u128 = self.balance_per_account.get(&merchant_id)
         .unwrap_or(0u128);
-        balance_per_account += ammount;
+        balance_per_account += amount;
         //balance_per_account -= CONTRACT_INIT_BALANCE;
         self.balance_per_account.insert(&merchant_id, &balance_per_account);
         Promise::new(sub_id)
@@ -142,7 +142,7 @@ impl Contract {
         .then(
             ext_self::add_amount_to_balance(
                 merchant_id, 
-                ammount, 
+                amount, 
                 env::current_account_id(), 
                 0, 
                 Gas(5_000_000_000_000),
