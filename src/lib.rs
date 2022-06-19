@@ -1,3 +1,4 @@
+use external::ext_self;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{UnorderedSet, UnorderedMap, LookupMap};
 use near_sdk::json_types::U128;
@@ -116,6 +117,40 @@ impl Contract {
         children_account_ids.insert(&sub_id);
         self.children_account_ids.insert(&merchant_id, &children_account_ids);
         //true
+    }
+
+    fn destroy_sub_account(&mut self, merchant_id: AccountId, sub_id: AccountId, ammount: u128) {
+        // let mut children_account_ids: UnorderedSet<U128> =
+        // self.children_account_ids.get(&merchant_id).unwrap_or_else(|| {
+        //     UnorderedSet::new(
+        //         StorageKey::ByChildrenAccountIdsInner { 
+        //             account_id_hash: hash_account_id(&merchant_id),
+        //         }
+        //         .try_to_vec().unwrap(),
+        //     )
+        // });
+        // children_account_ids.remove(&sub_id);
+        // self.children_account_ids.insert(&merchant_id, &children_account_ids);
+
+        let mut balance_per_account: u128 = self.balance_per_account.get(&merchant_id)
+        .unwrap_or(0u128);
+        balance_per_account += ammount;
+        //balance_per_account -= CONTRACT_INIT_BALANCE;
+        self.balance_per_account.insert(&merchant_id, &balance_per_account);
+        Promise::new(sub_id)
+        .delete_account(env::current_account_id())
+        .then(
+            ext_self::add_amount_to_balance(
+                merchant_id, 
+                ammount, 
+                env::current_account_id(), 
+                0, 
+                Gas(5_000_000_000_000),
+            )
+        );
+        
+
+
     }
 
 }

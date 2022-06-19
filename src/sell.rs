@@ -1,4 +1,4 @@
-use near_sdk::require;
+use near_sdk::{require};
 
 use crate::{*, external::ext_self};
 
