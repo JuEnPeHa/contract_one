@@ -18,7 +18,7 @@ impl SellingFunctions for Contract{
         require!(balance >= amount, "Not enough balance");
         let new_balance: u128 = balance - amount;
         self.balance_per_account.insert(&merchant_id, &new_balance);
-        ext_example::ft_transfer(
+        ext_external::ft_transfer(
             buyer_id.to_string(), 
             amount.to_string(), 
             "".to_string(), 

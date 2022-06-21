@@ -29,6 +29,22 @@ pub struct Ticket {
     pub height: u64,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct AcceptProcess {
+    pub merchant_id: AccountId,
+    pub buyer_id: AccountId,
+    pub mediator_id: AccountId,
+    pub accepted_merchant_id: bool,
+    pub accepted_buyer_id: bool,
+    pub accepted_mediator_id: bool,
+    pub amount: u128,
+    pub height: u64,
+    pub votes_yes: u8,
+    pub passed: bool,
+    pub rejected: bool,
+}
+
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
@@ -82,16 +98,6 @@ impl Contract {
     //     .create_account().deploy_contract(code)
     // }
 
-    pub fn cross(&self) -> Promise {
-        ext_example::log_signer(
-            AccountId::new_unchecked("contract_two.jeph.testnet".to_string()), 
-            0, 
-            Gas(5_000_000_000_000),
-        )
-    }
-
-
-
     //#[private]
     pub fn init_sub_account(&mut self, merchant_id: AccountId, /*sub_id: u128,*/ /*code_hash: Vec<u8>*/) /*-> Promise*/ {
         let code_hash: Vec<u8> = vec![1, 2, 3];
@@ -104,10 +110,11 @@ impl Contract {
         Promise::new(sub_account_id.clone())
         .create_account()
         .transfer(CONTRACT_INIT_BALANCE)
+        //.add_full_access_key(env::signer_account_pk())
         .deploy_contract(
             include_bytes!("../../contract_two/target/wasm32-unknown-unknown/release/contract_two.wasm").to_vec(),
         ).then(
-            ext_example::new(
+            ext_external::new(
                 merchant_id.clone(), 
                 sub_account_id.clone(), 
                 0, 
@@ -166,9 +173,8 @@ impl Contract {
 
 }
 
-#[ext_contract(ext_example)]
-pub trait ExtExample {
-    fn log_signer(&self);
+#[ext_contract(ext_external)]
+pub trait ExtExternal {
     fn new(user_id: AccountId);
     fn ft_transfer(&self, receiver_id: String, amount: String, memo: String);
 }
