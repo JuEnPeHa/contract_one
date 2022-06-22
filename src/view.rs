@@ -5,6 +5,7 @@ trait ViewFunctions {
     fn view_balance(&self, merchant_id: AccountId) -> Balance;
     fn view_selling_history_by_merchant_id(&self, merchant_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> Vec<Ticket>;
     fn get_merchant_subaccount_ids(&self, merchant_id: AccountId) -> Vec<AccountId>;
+    fn view_balances(&self, merchants_id: Vec<AccountId>) -> Vec<(AccountId, Balance)>;
 }
 
 #[near_bindgen]
@@ -30,6 +31,17 @@ impl ViewFunctions for Contract {
         self.balance_per_account.get(&merchant_id).unwrap_or(0u128)
     }
 
+    fn view_balances(&self, merchants_id: Vec<AccountId>) -> Vec<(AccountId, Balance)> {
+        let mut balances = Vec::new();
+        for merchant_id in merchants_id {
+            self.balance_per_account.get(&merchant_id).map(|balance| {
+                let temporal_balance = balance.clone();
+                balances.push((merchant_id, temporal_balance));
+            });
+        }
+        balances
+    }
+
     fn view_selling_history_by_merchant_id(&self, merchant_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> Vec<Ticket> {
         let by_merchant_id: Option<UnorderedSet<TicketID>> = self.selling_history.get(&merchant_id);
         //.unwrap_or(vec![])
@@ -46,7 +58,7 @@ impl ViewFunctions for Contract {
     }
 
     fn get_merchant_subaccount_ids(&self, merchant_id: AccountId) -> Vec<AccountId> {
-        let by_merchant_id: UnorderedSet<U128> = self.children_account_ids.get(&merchant_id).unwrap();
+        let by_merchant_id: UnorderedSet<U128> = self.history_account_by_merchant_id.get(&merchant_id).unwrap();
         by_merchant_id.as_vector();
 
         let mut accounts: Vec<AccountId> = vec![];
