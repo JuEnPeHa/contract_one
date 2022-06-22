@@ -26,23 +26,22 @@ impl Contract {
         require!(env::signer_account_id() == merchant_id, "Only merchant can confirm sell");
         require!(env::predecessor_account_id() == AccountId::new_unchecked("usdc.fakes.testnet".to_string()), "Only p2p can confirm sell");
         let mut transfer_succeeded = is_promise_success();
-        if transfer_succeeded {
-            let result = String::from_utf8(promise_result_as_success().unwrap());
-            if result.is_ok() {
-                let result = result.unwrap();
-                if result == "false".to_string() {
-                    transfer_succeeded = false;
+        // if transfer_succeeded {
+        //     let result = String::from_utf8(promise_result_as_success().unwrap());
+        //     if result.is_ok() {
+        //         let result = result.unwrap();
+        //         if result == "false".to_string() {
+        //             transfer_succeeded = false;
                     let balance: u128 = self.balance_per_account.get(&merchant_id).unwrap_or(0u128);
                     let new_balance: u128 = balance + amount;
                     self.balance_per_account.insert(&merchant_id, &new_balance);
-                } else {
-                    transfer_succeeded = true;
-                }
-            }
+            //     } else {
+            //         transfer_succeeded = true;
+            //     }
+            // }
             env::log_str(format!("The funds has been transferred: {}", transfer_succeeded).as_str());
         }
-    }
-
+    
     pub fn add_amount_to_balance(&mut self,
         merchant_id: AccountId,
         amount: u128) {

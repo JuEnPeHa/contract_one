@@ -19,6 +19,7 @@ const GAS_FOR_BASIC_CROSS_CONTRACT_CALL: Gas = Gas(5_000_000_000_000);
 
 const CONTRACT_INIT_BALANCE: u128 = 1_245_949_999_000_000_000_000_000; //1000
 static TICKET_PREFIX: &str = "ticket_";
+static VALID_BLOCKS: u64 = 1_200_00;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
 #[serde(crate = "near_sdk::serde")]
@@ -51,6 +52,7 @@ pub struct SellingProcess {
 pub struct Contract {
     //La cuenta en la qué se desplegó el contrato.
     pub contract_account_id: AccountId,
+    pub mediator_id: AccountId,
     //Mantenemos aquí si es usuario pagó para mantener el contrato o no.
     pub keep_account_open: UnorderedMap<AccountId, bool>,
     //Mantenemos el último contrato desplegado del usuario ya sea permanente o no.
@@ -103,6 +105,7 @@ impl Contract {
         let contract_account_id = env::current_account_id();
         let this: Contract = Self {
             contract_account_id,
+            mediator_id: env::signer_account_id(),
             keep_account_open: UnorderedMap::new(StorageKey::ByKeepAccountOpen),
             children_account_id: UnorderedMap::new(StorageKey::ByChildrenAccountIds),
             next_child_account_id: U128(0),
