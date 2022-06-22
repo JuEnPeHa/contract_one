@@ -4,6 +4,10 @@ use crate::{*, external::ext_self};
 
 trait SellingFunctions {
     fn confirm_sell(&mut self, merchant_id: AccountId, buyer_id: AccountId, amount: u128);
+    fn start_sell(&mut self, merchant_id: AccountId, amount: u128);
+    fn confirm_by_mediator(&mut self, merchant_id: AccountId, buyer_id: AccountId, amount: u128) {
+        
+    }
 }
 
 #[near_bindgen]
@@ -35,7 +39,13 @@ impl SellingFunctions for Contract{
             GAS_FOR_BASIC_CROSS_CONTRACT_CALL
         )
         );
-     }
+        fn start_buy(&mut self, merchant_id: AccountId, amount: u128) {
+
+        }
+        fn confirm_by_mediator(&mut self, merchant_id: AccountId, buyer_id: AccountId, amount: u128) {
+            
+        }
+    }
 }
 
 // pub fn cross_dos(&self) -> Promise {
