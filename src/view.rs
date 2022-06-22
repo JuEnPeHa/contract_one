@@ -35,7 +35,7 @@ impl ViewFunctions for Contract {
         let mut balances = Vec::new();
         for merchant_id in merchants_id {
             self.balance_per_account.get(&merchant_id).map(|balance| {
-                let temporal_balance = balance.clone();
+                let temporal_balance: u128 = balance.clone();
                 balances.push((merchant_id, temporal_balance));
             });
         }

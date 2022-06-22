@@ -40,6 +40,7 @@ pub struct SellingProcess {
     pub accepted_mediator_id: bool,
     pub amount: u128,
     pub height: u64,
+    pub last_height: u64,
     pub votes_yes: u8,
     pub passed: bool,
     pub rejected: bool,
@@ -64,6 +65,11 @@ pub struct Contract {
     pub history: UnorderedMap<TicketID, Ticket>,
     //Mantenemos los tickets id por los usuarios.
     pub selling_history: LookupMap<AccountId, UnorderedSet<TicketID>>,
+
+    pub selling_process: UnorderedMap<TicketID, SellingProcess>,
+    pub selling_in_progress: UnorderedSet<TicketID>,
+    pub selling_processed: UnorderedSet<TicketID>,
+    pub selling_by_merchant_id: UnorderedMap<AccountId, UnorderedSet<TicketID>>,
 }
 
 #[derive(BorshSerialize, BorshStorageKey)]
@@ -80,6 +86,12 @@ pub enum StorageKey {
     ByBalancePerAccountInner { account_id_hash: CryptoHash },
     BySellingHistory,
     BySellingHistoryInner { account_id_hash: CryptoHash },
+    BySellingProcess,
+    BySellingProcessInner { ticket_id_hash: CryptoHash },
+    BySellingInProgress,
+    BySellingProcessed,
+    BySellingByMerchantId,
+    BySellingByMerchantIdInner { merchant_id_hash: CryptoHash },
 }
 
 #[near_bindgen]
@@ -98,6 +110,10 @@ impl Contract {
             history: UnorderedMap::new(StorageKey::History),
             selling_history: LookupMap::new(StorageKey::BySellingHistory),
             history_account_by_merchant_id: UnorderedMap::new(StorageKey::ByHistoryAccountByMerchantId),
+            selling_process: UnorderedMap::new(StorageKey::BySellingProcess),
+            selling_in_progress: UnorderedSet::new(StorageKey::BySellingInProgress),
+            selling_processed: UnorderedSet::new(StorageKey::BySellingProcessed),
+            selling_by_merchant_id: UnorderedMap::new(StorageKey::BySellingByMerchantId),
         };
         this
     }
@@ -232,18 +248,6 @@ impl Contract {
 
     pub fn add_balance_to_merchant(&mut self, merchant_id: AccountId, sub_id: AccountId, amount: u128) {
         env::log_str("add_balance_to_merchant");
-        // let mut children_account_ids: UnorderedSet<U128> =
-        // self.children_account_ids.get(&merchant_id).unwrap_or_else(|| {
-        //     UnorderedSet::new(
-        //         StorageKey::ByChildrenAccountIdsInner { 
-        //             account_id_hash: hash_account_id(&merchant_id),
-        //         }
-        //         .try_to_vec().unwrap(),
-        //     )
-        // });
-        // children_account_ids.remove(&sub_id);
-        // self.children_account_ids.insert(&merchant_id, &children_account_ids);
-
         env::log_str("autodestruction");
         env::log_str(format!("signer: {}", env::signer_account_id()).as_str());
         env::log_str(format!("predecessor: {}", env::predecessor_account_id()).as_str());
