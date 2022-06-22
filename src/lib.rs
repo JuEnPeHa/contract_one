@@ -5,7 +5,7 @@ use near_sdk::json_types::U128;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     assert_one_yocto, env, ext_contract, near_bindgen, promise_result_as_success, AccountId,
-    Balance, BorshStorageKey, CryptoHash, Gas, PanicOnDefault, Promise,
+    Balance, BorshStorageKey, CryptoHash, Gas, PanicOnDefault, Promise, require,
 };
 
 use crate::internal::*;
@@ -72,7 +72,8 @@ pub enum StorageKey {
 impl Contract {
 
     #[init]
-    pub fn new_meta(contract_account_id: AccountId) -> Self {
+    pub fn new_meta() -> Self {
+        let contract_account_id = env::current_account_id();
         let this: Contract = Self {
             contract_account_id,
             children_account_ids: UnorderedMap::new(StorageKey::ByChildrenAccountIds),
@@ -99,7 +100,7 @@ impl Contract {
     // }
 
     //#[private]
-    pub fn init_sub_account(&mut self, merchant_id: AccountId, /*sub_id: u128,*/ /*code_hash: Vec<u8>*/) /*-> Promise*/ {
+    pub fn init_sub_account(&mut self, merchant_id: AccountId, amount: Balance /*sub_id: u128,*/ /*code_hash: Vec<u8>*/) /*-> Promise*/ {
         let code_hash: Vec<u8> = vec![1, 2, 3];
         let sub_id = self.next_child_account_id;
         let sub_account_id: AccountId = AccountId::new_unchecked(
@@ -116,6 +117,7 @@ impl Contract {
         ).then(
             ext_external::new(
                 merchant_id.clone(), 
+                amount,
                 sub_account_id.clone(), 
                 0, 
                 Gas(5_000_000_000_000),
@@ -150,6 +152,23 @@ impl Contract {
         // children_account_ids.remove(&sub_id);
         // self.children_account_ids.insert(&merchant_id, &children_account_ids);
 
+        env::log_str("autodestruction");
+        env::log_str(format!("signer: {}", env::signer_account_id()).as_str());
+        env::log_str(format!("predecessor: {}", env::predecessor_account_id()).as_str());
+        // env::log_str(format!("owner: {}", self.owner_id).as_str());
+        // env::log_str(format!("user: {}", self.user_id).as_str());
+        env::log_str(format!("merchant: {}", merchant_id).as_str());
+        env::log_str(format!("amount: {}", amount).as_str());
+        env::log_str(format!("promise_result_as_success: {:?}", promise_result_as_success()).as_str());
+        env::log_str(format!("promise_result_as_success: {:#?}", promise_result_as_success()).as_str());
+        env::log_str(format!("attached_gas: {:?}", env::prepaid_gas()).as_str());
+        env::log_str(format!("attached_gas: {:#?}", env::prepaid_gas()).as_str());
+        env::log_str(format!("used_gas: {:?}", env::used_gas()).as_str());
+        env::log_str(format!("used_gas: {:#?}", env::used_gas()).as_str());
+        env::log_str(format!("result: {:?}", env::promise_result(0)).as_str());
+        env::log_str(format!("result: {:#?}", env::promise_result(0)).as_str());
+        require!(promise_result_as_success() != None, "No se pudo transferir el dinero, no hay suficiente");
+
         let mut balance_per_account: u128 = self.balance_per_account.get(&merchant_id)
         .unwrap_or(0u128);
         balance_per_account += amount;
@@ -166,7 +185,7 @@ impl Contract {
 
 #[ext_contract(ext_external)]
 pub trait ExtExternal {
-    fn new(user_id: AccountId);
+    fn new(user_id: AccountId, required_amount: Balance);
     fn ft_transfer(&self, receiver_id: String, amount: String, memo: String);
     fn delete_contract(&mut self);
 }
