@@ -136,8 +136,8 @@ impl Contract {
         //true
     }
 
-    pub fn destroy_sub_account(&mut self, merchant_id: AccountId, sub_id: AccountId, amount: u128) {
-        env::log_str("destroy_sub_account");
+    pub fn add_balance_to_merchant(&mut self, merchant_id: AccountId, sub_id: AccountId, amount: u128) {
+        env::log_str("add_balance_to_merchant");
         // let mut children_account_ids: UnorderedSet<U128> =
         // self.children_account_ids.get(&merchant_id).unwrap_or_else(|| {
         //     UnorderedSet::new(
@@ -155,19 +155,10 @@ impl Contract {
         balance_per_account += amount;
         //balance_per_account -= CONTRACT_INIT_BALANCE;
         self.balance_per_account.insert(&merchant_id, &balance_per_account);
-        Promise::new(sub_id)
-        .delete_account(env::current_account_id())
-        .then(
-            ext_self::add_amount_to_balance(
+            self.add_amount_to_balance(
                 merchant_id, 
-                amount, 
-                env::current_account_id(), 
-                0, 
-                Gas(5_000_000_000_000),
-            )
+                amount,
         );
-        
-
 
     }
 
@@ -177,4 +168,5 @@ impl Contract {
 pub trait ExtExternal {
     fn new(user_id: AccountId);
     fn ft_transfer(&self, receiver_id: String, amount: String, memo: String);
+    fn delete_contract(&mut self);
 }

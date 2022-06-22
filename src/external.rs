@@ -11,7 +11,7 @@ pub trait ExtSelf {
         buyer_id: AccountId,
         amount: u128,
     ) -> Promise;
-    fn add_amount_to_balance(&mut self, merchant_id: AccountId, amount: u128);
+    //fn add_amount_to_balance(&mut self, merchant_id: AccountId, amount: u128);
 
 }
 
@@ -43,7 +43,7 @@ impl Contract {
         }
     }
 
-    fn add_amount_to_balance(&mut self,
+    pub fn add_amount_to_balance(&mut self,
         merchant_id: AccountId,
         amount: u128) {
             log_str("add_amount_to_balance");
