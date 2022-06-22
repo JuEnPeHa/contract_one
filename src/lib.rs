@@ -19,7 +19,7 @@ const GAS_FOR_BASIC_CROSS_CONTRACT_CALL: Gas = Gas(5_000_000_000_000);
 
 const CONTRACT_INIT_BALANCE: u128 = 1_245_949_999_000_000_000_000_000; //1000
 static TICKET_PREFIX: &str = "ticket_";
-static VALID_BLOCKS: u64 = 1_200_00;
+static VALID_BLOCKS: u64 = 1_200_000;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
 #[serde(crate = "near_sdk::serde")]
