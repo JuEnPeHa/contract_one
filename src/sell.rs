@@ -21,6 +21,7 @@ trait SellingFunctions {
     fn confirm_sell_by_merchant(&mut self, ticket_id: TicketID);
     fn start_buy(&mut self, merchant_id: AccountId, amount: u128);
     fn confirm_by_mediator(&mut self, ticket_id: TicketID);
+    fn cancel_sell(&mut self);
 }
 
 #[near_bindgen]
@@ -43,10 +44,6 @@ impl SellingFunctions for Contract{
         self.selling_process.insert(&ticket_id, &selling_process);
         self.selling_in_progress.remove(&ticket_id);
         self.selling_processed.insert(&ticket_id);
-        // let balance: u128 = self.balance_per_account.get(&merchant_id).unwrap_or(0u128);
-        // require!(balance >= amount, "Not enough balance");
-        // let new_balance: u128 = balance - amount;
-        // self.balance_per_account.insert(&merchant_id, &new_balance);
         ext_external::ft_transfer(
             buyer_id.to_string(), 
             amount.to_string(), 
@@ -104,9 +101,6 @@ impl SellingFunctions for Contract{
                 env::panic_str("Selling process not found")
             });
             require!(selling_process.mediator_id == self.mediator_id, "Only mediator can confirm by mediator");
-            require!(selling_process.accepted_mediator_id == false, "Mediator already confirmed");
-            require!(selling_process.accepted_buyer_id == true, "Buyer not confirmed");
-            require!(selling_process.accepted_merchant_id == false, "Merchant already confirmed");
             selling_process.accepted_mediator_id = true;
             selling_process.votes_yes += 1;
             if selling_process.votes_yes >= 2 {
@@ -130,6 +124,27 @@ impl SellingFunctions for Contract{
                 ext_self::after_sell_confirm(
                     merchant_id, 
                     amount, 
+                    env::current_account_id(), 
+                    0, 
+                    GAS_FOR_BASIC_CROSS_CONTRACT_CALL
+                )
+            );
+        }
+
+        fn cancel_sell(&mut self) {
+            let balance = self.balance_per_account.get(&env::signer_account_id()).unwrap_or(0u128);
+            require!(balance >= 0, "Not enough balance");
+            ext_external::ft_transfer(
+                env::signer_account_id().to_string(), 
+                balance.to_string(), 
+                "".to_string(), 
+                AccountId::new_unchecked("usdc.fakes.testnet".to_string()), 
+                1, 
+                GAS_FOR_BASIC_CROSS_CONTRACT_CALL,
+            ).then(
+                ext_self::after_sell_confirm(
+                    env::signer_account_id(), 
+                    balance, 
                     env::current_account_id(), 
                     0, 
                     GAS_FOR_BASIC_CROSS_CONTRACT_CALL
